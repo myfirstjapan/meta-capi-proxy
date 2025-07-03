@@ -1,6 +1,18 @@
 import crypto from 'crypto';
 
 export default async function handler(req, res) {
+  // CORS対応（OPTIONSメソッドのプリフライト対応含む）
+  if (req.method === 'OPTIONS') {
+    res.setHeader('Access-Control-Allow-Origin', '*'); // 必要に応じてOriginを限定してください
+    res.setHeader('Access-Control-Allow-Methods', 'POST, OPTIONS');
+    res.setHeader('Access-Control-Allow-Headers', 'Content-Type');
+    res.status(204).end();
+    return;
+  }
+
+  // 他のメソッドへのCORS設定
+  res.setHeader('Access-Control-Allow-Origin', '*'); // 必要に応じてOriginを限定してください
+
   if (req.method !== 'POST') {
     return res.status(405).json({ error: 'Method Not Allowed' });
   }
@@ -16,7 +28,7 @@ export default async function handler(req, res) {
     } = req.body;
 
     const pixelId = '1252395909231068'; // あなたのPixel ID
-    const accessToken = 'EAAJ3UWX2W6gBO7n8TPvQrysvGIEARZB3RnTHKN72UGKgteM6lKUGAAAqd32sSE2NNVpiZCSnZC6iIaw1JEhQOUvJ1lccvVQYhJVei8p7CDP2wquTVLLjdYNyoJ7yRRCg1aRK92zrcDNxs1EidSvPK7MQ7ZBZAnAlhQ8Qivi7AwbH55aRvzwDbXRzFzUgDKzsjnwZDZD';
+    const accessToken = 'EAAJ3UWX2W6gBO7n8TPvQrysvGIEARZB3RnTHKN72UGKgteM6lKUGAAAqd32sSE2NNVpiZCSnZC6iIaw1JEhQOUvJ1lccvVQYhJVei8p7CDP2wquTVLLjdYNyoJ7yRRCg1aRK92zrcDNxs1EidSvPK7MQ7ZBZAnAlhQ8Qivi7AwbH55aRvzwDbXRzFzUgDKzsjnwZDZD'; // あなたのアクセストークン
 
     const hashSHA256 = (input) =>
       crypto.createHash('sha256').update(input).digest('hex');
