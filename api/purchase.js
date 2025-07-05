@@ -28,7 +28,7 @@ export default async function handler(req, res) {
     } = req.body;
 
     const pixelId = '1252395909231068'; // あなたのPixel ID
-    const accessToken = 'EAAJ3UWX2W6gBO7n8TPvQrysvGIEARZB3RnTHKN72UGKgteM6lKUGAAAqd32sSE2NNVpiZCSnZC6iIaw1JEhQOUvJ1lccvVQYhJVei8p7CDP2wquTVLLjdYNyoJ7yRRCg1aRK92zrcDNxs1EidSvPK7MQ7ZBZAnAlhQ8Qivi7AwbH55aRvzwDbXRzFzUgDKzsjnwZDZD'; // あなたのアクセストークン
+    const accessToken = process.env.ACCESS_TOKEN;
 
     const hashSHA256 = (input) =>
       crypto.createHash('sha256').update(input).digest('hex');
