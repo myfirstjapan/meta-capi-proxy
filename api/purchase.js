@@ -1,21 +1,18 @@
 import crypto from 'crypto';
+
 export default async function handler(req, res) {
-
-if (req.method === 'GET') {
-  return res.status(200).json({ message: 'API is working!' });
-}
-
-  // CORS対応（OPTIONSメソッドのプリフライト対応含む）
-  if (req.method === 'OPTIONS') {
-    res.setHeader('Access-Control-Allow-Origin', '*'); // 必要に応じてOriginを限定してください
-    res.setHeader('Access-Control-Allow-Methods', 'POST, OPTIONS');
-    res.setHeader('Access-Control-Allow-Headers', 'Content-Type');
-    res.status(204).end();
-    return;
+  if (req.method === 'GET') {
+    return res.status(200).json({ message: 'API is working!' });
   }
 
-  // 他のメソッドへのCORS設定
-  res.setHeader('Access-Control-Allow-Origin', '*'); // 必要に応じてOriginを限定してください
+  if (req.method === 'OPTIONS') {
+    res.setHeader('Access-Control-Allow-Origin', '*');
+    res.setHeader('Access-Control-Allow-Methods', 'POST, OPTIONS');
+    res.setHeader('Access-Control-Allow-Headers', 'Content-Type');
+    return res.status(204).end();
+  }
+
+  res.setHeader('Access-Control-Allow-Origin', '*');
 
   if (req.method !== 'POST') {
     return res.status(405).json({ error: 'Method Not Allowed' });
@@ -31,7 +28,7 @@ if (req.method === 'GET') {
       test_event_code = null,
     } = req.body;
 
-    const pixelId = '1252395909231068'; // あなたのPixel ID
+    const pixelId = '1252395909231068';
     const accessToken = process.env.ACCESS_TOKEN;
 
     const hashSHA256 = (input) =>
@@ -42,7 +39,8 @@ if (req.method === 'GET') {
         {
           event_name: 'Purchase',
           event_time: Math.floor(Date.now() / 1000),
-          event_id: event_id,
+          event_id,
+          event_source_url: 'https://jp.myfirst.tech/',
           action_source: 'website',
           user_data: {
             em: [hashSHA256(email)],
@@ -50,8 +48,8 @@ if (req.method === 'GET') {
             client_user_agent: req.headers['user-agent'],
           },
           custom_data: {
-            currency: currency,
-            value: value,
+            currency,
+            value,
           },
         },
       ],
@@ -68,8 +66,8 @@ if (req.method === 'GET') {
     });
 
     const result = await response.json();
-
     return res.status(200).json({ status: 'ok', meta_response: result });
+
   } catch (error) {
     return res.status(500).json({ error: 'Internal Server Error', details: error.message });
   }
