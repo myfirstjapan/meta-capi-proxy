@@ -1,9 +1,10 @@
+import crypto from 'crypto';
+export default async function handler(req, res) {
+
 if (req.method === 'GET') {
   return res.status(200).json({ message: 'API is working!' });
 }
-import crypto from 'crypto';
 
-export default async function handler(req, res) {
   // CORS対応（OPTIONSメソッドのプリフライト対応含む）
   if (req.method === 'OPTIONS') {
     res.setHeader('Access-Control-Allow-Origin', '*'); // 必要に応じてOriginを限定してください
