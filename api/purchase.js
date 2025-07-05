@@ -1,24 +1,17 @@
 import crypto from 'crypto';
 
 export default async function handler(req, res) {
-  if (req.method === 'GET') {
-    return res.status(200).json({ message: 'API is working!' });
+  // ✅ CORS 対応（全メソッド対応）
+  res.setHeader("Access-Control-Allow-Origin", "*");
+  res.setHeader("Access-Control-Allow-Methods", "POST, OPTIONS");
+  res.setHeader("Access-Control-Allow-Headers", "Content-Type");
+
+  if (req.method === "OPTIONS") {
+    return res.status(204).end(); // プリフライトリクエストへの即時応答
   }
 
-  // CORS対応（OPTIONSメソッドのプリフライト対応含む）
-  if (req.method === 'OPTIONS') {
-    res.setHeader('Access-Control-Allow-Origin', '*');
-    res.setHeader('Access-Control-Allow-Methods', 'POST, OPTIONS');
-    res.setHeader('Access-Control-Allow-Headers', 'Content-Type');
-    res.status(204).end();
-    return;
-  }
-
-  // 他のメソッドへのCORS設定
-  res.setHeader('Access-Control-Allow-Origin', '*');
-
-  if (req.method !== 'POST') {
-    return res.status(405).json({ error: 'Method Not Allowed' });
+  if (req.method !== "POST") {
+    return res.status(405).json({ error: "Method Not Allowed" });
   }
 
   try {
