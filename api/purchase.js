@@ -1,4 +1,4 @@
-module.exports = async (req, res) => {
+export default async function handler(req, res) {
   if (req.method !== 'POST') {
     return res.status(405).json({ error: 'Method not allowed' });
   }
@@ -7,6 +7,7 @@ module.exports = async (req, res) => {
   const pixelId = process.env.META_PIXEL_ID;
 
   if (!accessToken || !pixelId) {
+    console.error("❌ 環境変数が設定されていません");
     return res.status(500).json({ error: 'Missing Meta config' });
   }
 
@@ -25,17 +26,24 @@ module.exports = async (req, res) => {
     ]
   };
 
-  const response = await fetch(`https://graph.facebook.com/v18.0/${pixelId}/events?access_token=${accessToken}`, {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify(payload)
-  });
+  try {
+    const response = await fetch(`https://graph.facebook.com/v18.0/${pixelId}/events?access_token=${accessToken}`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(payload)
+    });
 
-  const data = await response.json();
+    const data = await response.json();
 
-  if (!response.ok) {
-    return res.status(500).json({ error: 'Meta API error', details: data });
+    if (!response.ok) {
+      console.error("❌ Meta API エラー:", data);
+      return res.status(500).json({ error: 'Meta API error', details: data });
+    }
+
+    return res.status(200).json({ success: true, data });
+
+  } catch (err) {
+    console.error("❌ Fetch中に例外:", err);
+    return res.status(500).json({ error: 'Fetch Exception', message: err.message });
   }
-
-  return res.status(200).json({ success: true, data });
-};
+}
