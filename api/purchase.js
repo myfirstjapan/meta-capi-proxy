@@ -1,30 +1,41 @@
 export default async function handler(req, res) {
-  // CORS対応ヘッダーを設定
-  res.setHeader('Access-Control-Allow-Origin', '*');
-  res.setHeader('Access-Control-Allow-Methods', 'POST, OPTIONS');
-  res.setHeader('Access-Control-Allow-Headers', 'Content-Type');
-
-  if (req.method === 'OPTIONS') {
-    return res.status(200).end();
-  }
-
   if (req.method !== 'POST') {
-    return res.status(405).json({ error: 'Method Not Allowed' });
+    return res.status(405).json({ error: 'Method not allowed' });
   }
 
-  try {
-    const payload = req.body;
+  const accessToken = process.env.META_ACCESS_TOKEN;
+  const pixelId = process.env.META_PIXEL_ID;
 
-    const response = await fetch('https://graph.facebook.com/v19.0/[あなたのピクセルID]/events?access_token=[トークン]', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(payload),
-    });
-
-    const meta_response = await response.json();
-    res.status(200).json({ status: 'ok', meta_response });
-  } catch (err) {
-    console.error('❌ エラー:', err);
-    res.status(500).json({ status: 'error', message: err.message });
+  if (!accessToken || !pixelId) {
+    return res.status(500).json({ error: 'Missing Meta config' });
   }
+
+  const event_id = req.body.event_id || `event_${Date.now()}`;
+  const payload = {
+    data: [
+      {
+        event_name: "Purchase",
+        event_time: Math.floor(Date.now() / 1000),
+        event_id: event_id,
+        action_source: "website",
+        event_source_url: req.body.url || "",
+        user_data: req.body.user_data,
+        custom_data: req.body.custom_data || {},
+      }
+    ]
+  };
+
+  const response = await fetch(`https://graph.facebook.com/v18.0/${pixelId}/events?access_token=${accessToken}`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(payload)
+  });
+
+  const data = await response.json();
+
+  if (!response.ok) {
+    return res.status(500).json({ error: 'Meta API error', details: data });
+  }
+
+  return res.status(200).json({ success: true, data });
 }
