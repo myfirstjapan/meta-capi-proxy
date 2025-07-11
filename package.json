@@ -1,4 +1,5 @@
 {
+<<<<<<< HEAD
   "name": "meta-capi-proxy",
   "version": "1.0.0",
   "main": "index.js",
@@ -11,4 +12,7 @@
     "express": "^4.18.2",
     "node-fetch": "^2.6.7"
   }
+=======
+  "type": "module"
+>>>>>>> 9c0d8b506aac2f55369bf734fbcbc9a24ab59da8
 }
