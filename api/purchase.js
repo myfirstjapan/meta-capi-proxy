@@ -8,7 +8,7 @@ export default async function handler(req, res) {
   const pixelId = process.env.META_PIXEL_ID;
 
   if (!accessToken || !pixelId) {
-    return res.status(500).json({ error: "Missing META_ACCESS_TOKEN or META_PIXEL_ID" });
+    return res.status(500).json({ error: "Server config missing" });
   }
 
   const {
@@ -29,7 +29,11 @@ export default async function handler(req, res) {
         event_id: event_id,
         event_source_url: event_source_url || "https://yourdomain.com",
         action_source: "website",
-        user_data: user_data || {},
+        user_data: {
+          client_user_agent: user_data?.client_user_agent,
+          fbc: user_data?.fbc,
+          fbp: user_data?.fbp,
+        },
         custom_data: {
           currency: currency || "JPY",
           value: value || 0,
@@ -40,7 +44,7 @@ export default async function handler(req, res) {
   };
 
   try {
-    const response = await fetch(
+    const fbRes = await fetch(
       `https://graph.facebook.com/v19.0/${pixelId}/events?access_token=${accessToken}`,
       {
         method: "POST",
@@ -51,16 +55,10 @@ export default async function handler(req, res) {
       }
     );
 
-    const data = await response.json();
-
-    if (!response.ok) {
-      console.error("Meta CAPI Error Response:", data);
-      return res.status(500).json({ error: "Meta API Error", details: data });
-    }
-
-    res.status(200).json(data);
-  } catch (error) {
-    console.error("Meta CAPI送信エラー:", error);
+    const fbData = await fbRes.json();
+    res.status(200).json(fbData);
+  } catch (err) {
+    console.error("Meta CAPI送信エラー:", err);
     res.status(500).json({ error: "Meta CAPI送信エラー" });
   }
 }
