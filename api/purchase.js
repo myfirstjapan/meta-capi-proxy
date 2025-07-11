@@ -1,49 +1,64 @@
 export default async function handler(req, res) {
+  // ✅ CORS ヘッダーの設定
+  res.setHeader('Access-Control-Allow-Origin', '*');
+  res.setHeader('Access-Control-Allow-Methods', 'POST, OPTIONS');
+  res.setHeader('Access-Control-Allow-Headers', 'Content-Type');
+
+  // ✅ OPTIONSリクエストには即レスポンス
+  if (req.method === 'OPTIONS') {
+    return res.status(200).end();
+  }
+
+  // ✅ POST以外は拒否
   if (req.method !== 'POST') {
     return res.status(405).json({ error: 'Method not allowed' });
   }
 
-  const accessToken = process.env.META_ACCESS_TOKEN;
-  const pixelId = process.env.META_PIXEL_ID;
-
-  if (!accessToken || !pixelId) {
-    console.error("❌ 環境変数が設定されていません");
-    return res.status(500).json({ error: 'Missing Meta config' });
-  }
-
-  const event_id = req.body.event_id || `event_${Date.now()}`;
-  const payload = {
-    data: [
-      {
-        event_name: "Purchase",
-        event_time: Math.floor(Date.now() / 1000),
-        event_id: event_id,
-        action_source: "website",
-        event_source_url: req.body.url || "",
-        user_data: req.body.user_data,
-        custom_data: req.body.custom_data || {},
-      }
-    ]
-  };
-
   try {
-    const response = await fetch(`https://graph.facebook.com/v18.0/${pixelId}/events?access_token=${accessToken}`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(payload)
-    });
+    const {
+      event_name,
+      event_time,
+      event_id,
+      user_data,
+      custom_data,
+      action_source,
+      access_token,
+      pixel_id,
+    } = req.body;
 
-    const data = await response.json();
+    const payload = {
+      data: [
+        {
+          event_name,
+          event_time,
+          event_id,
+          user_data,
+          custom_data,
+          action_source,
+        },
+      ],
+    };
+
+    const response = await fetch(
+      `https://graph.facebook.com/v17.0/${pixel_id}/events?access_token=${access_token}`,
+      {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload),
+      }
+    );
+
+    const result = await response.json();
 
     if (!response.ok) {
-      console.error("❌ Meta API エラー:", data);
-      return res.status(500).json({ error: 'Meta API error', details: data });
+      console.error('❌ Meta送信エラー:', result);
+      return res.status(500).json({ error: 'Failed to send event to Meta', detail: result });
     }
 
-    return res.status(200).json({ success: true, data });
-
+    console.log('✅ Meta送信成功:', result);
+    res.status(200).json({ message: 'Event sent to Meta successfully', result });
   } catch (err) {
-    console.error("❌ Fetch中に例外:", err);
-    return res.status(500).json({ error: 'Fetch Exception', message: err.message });
+    console.error('❌ サーバーエラー:', err);
+    res.status(500).json({ error: 'Server error', detail: err.message });
   }
 }
