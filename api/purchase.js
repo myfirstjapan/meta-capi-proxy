@@ -1,25 +1,31 @@
-// 再デプロイ用
 export default async function handler(req, res) {
-  // ✅ CORSヘッダー追加（ローカルテスト用）
+  // CORS ヘッダー設定
   res.setHeader("Access-Control-Allow-Origin", "*");
   res.setHeader("Access-Control-Allow-Methods", "POST, OPTIONS");
   res.setHeader("Access-Control-Allow-Headers", "Content-Type");
 
-  // ✅ preflightリクエスト処理（OPTIONSメソッド対応）
+  // Preflightリクエスト処理
   if (req.method === "OPTIONS") {
     res.status(200).end();
     return;
   }
 
+  // POST以外は拒否
   if (req.method !== "POST") {
     return res.status(405).json({ error: "Method Not Allowed" });
   }
 
+  // 環境変数の読み込み
+  const pixelId = process.env.META_PIXEL_ID;
+  const accessToken = process.env.META_ACCESS_TOKEN;
+
+  // 環境変数が未設定の場合
+  if (!pixelId || !accessToken) {
+    return res.status(500).json({ error: "環境変数が設定されていません。" });
+  }
+
   try {
     const { event_name, event_id, user_data, custom_data } = req.body;
-
-    const pixelId = process.env.META_PIXEL_ID;
-    const accessToken = process.env.META_ACCESS_TOKEN;
 
     const payload = {
       data: [
